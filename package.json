@@ -1,0 +1,43 @@
+{
+  "name": "cloudpan-dl",
+  "version": "0.1.0",
+  "description": "A focused desktop download manager for Quark and Baidu cloud share links.",
+  "main": "out/main/index.js",
+  "author": "hezebin",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
+    "dist:win": "npm run build && electron-builder --win --x64 --publish never",
+    "package:mac": "npm run dist:mac",
+    "package:win": "npm run dist:win"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "@chinese-fonts/xiaolai": "^3.0.0",
+    "@free-fonts/zhuque-fangsong": "^1.0.0",
+    "@hanzi.pro/webfonts-lxgw-wenkai": "^0.1.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "antd": "^6.6.5",
+    "electron-store": "^10.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.0.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}
