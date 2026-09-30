@@ -1,12 +1,10 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, net, shell, type IncomingMessage } from 'electron'
 import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
 import { randomUUID } from 'node:crypto'
 import Store from 'electron-store'
 import type { AppSettings, DownloadRequest, DownloadTask } from '../shared/types'
-import { assertDownloadUrl, cloudSession, resolveDownloadUrl } from './providers'
+import { assertDownloadUrl, cloudSession, downloadHeaders, resolveDownloadUrl } from './providers'
 
 type InternalTask = DownloadTask & {
   request: DownloadRequest
@@ -17,6 +15,65 @@ type InternalTask = DownloadTask & {
 }
 
 type StoredTask = DownloadTask & { request: DownloadRequest }
+
+function requestDownload(
+  request: DownloadRequest,
+  url: string,
+  headers: Record<string, string>,
+  signal: AbortSignal
+) {
+  return new Promise<IncomingMessage>((resolve, reject) => {
+    const clientRequest = net.request({
+      url,
+      method: 'GET',
+      session: cloudSession(request.provider),
+      credentials: 'include',
+      redirect: 'follow',
+      headers
+    })
+    const abort = () => clientRequest.abort()
+    signal.addEventListener('abort', abort, { once: true })
+    clientRequest.once('response', (response) => {
+      signal.removeEventListener('abort', abort)
+      signal.addEventListener('abort', abort, { once: true })
+      resolve(response)
+    })
+    clientRequest.once('error', reject)
+    clientRequest.end()
+  })
+}
+
+function saveResponse(
+  response: IncomingMessage,
+  path: string,
+  append: boolean,
+  onData: (chunk: Buffer) => void
+) {
+  return new Promise<void>((resolve, reject) => {
+    const output = createWriteStream(path, { flags: append ? 'a' : 'w' })
+    let settled = false
+    const fail = (error: Error) => {
+      if (settled) return
+      settled = true
+      output.destroy()
+      reject(error)
+    }
+    response.on('data', (chunk) => {
+      onData(chunk)
+      output.write(chunk)
+    })
+    response.once('error', fail)
+    response.once('aborted', () => fail(new Error('下载请求已中止')))
+    output.once('error', fail)
+    response.once('end', () => {
+      if (settled) return
+      output.end(() => {
+        settled = true
+        resolve()
+      })
+    })
+  })
+}
 
 export class DownloadManager {
   private tasks = new Map<string, InternalTask>()
@@ -109,27 +166,31 @@ export class DownloadManager {
     this.emit()
     try {
       const url = await resolveDownloadUrl(task.request)
+      task.viaTransfer = Boolean(task.request.file.meta?.savedFid)
       assertDownloadUrl(task.provider, url)
       mkdirSync(dirname(task.savePath), { recursive: true })
       const partPath = `${task.savePath}.part`
       const offset = existsSync(partPath) ? statSync(partPath).size : 0
       task.received = offset
       task.controller = new AbortController()
-      const response = await cloudSession(task.provider).fetch(url, {
-        signal: task.controller.signal,
-        headers: offset > 0 ? { Range: `bytes=${offset}-` } : undefined
-      })
-      if (!response.ok && response.status !== 206)
-        throw new Error(`下载服务器返回 HTTP ${response.status}`)
-      const append = offset > 0 && response.status === 206
+      const response = await requestDownload(
+        task.request,
+        url,
+        {
+          ...downloadHeaders(task.request),
+          ...(offset > 0 ? { Range: `bytes=${offset}-` } : {})
+        },
+        task.controller.signal
+      )
+      if (response.statusCode < 200 || response.statusCode >= 300)
+        throw new Error(`下载服务器返回 HTTP ${response.statusCode}`)
+      const append = offset > 0 && response.statusCode === 206
       if (!append) task.received = 0
       task.status = 'downloading'
       task.previousAt = Date.now()
       task.previousBytes = task.received
       this.emit()
-      if (!response.body) throw new Error('下载响应没有数据')
-      const source = Readable.fromWeb(response.body as any)
-      source.on('data', (chunk: Buffer) => {
+      await saveResponse(response, partPath, append, (chunk) => {
         task.received += chunk.length
         const now = Date.now()
         if (now - (task.previousAt || now) >= 500) {
@@ -141,7 +202,10 @@ export class DownloadManager {
           this.emit(false)
         }
       })
-      await pipeline(source, createWriteStream(partPath, { flags: append ? 'a' : 'w' }))
+      const downloadedSize = statSync(partPath).size
+      if (task.size > 0 && downloadedSize !== task.size) {
+        throw new Error(`下载文件大小不一致：实际 ${downloadedSize} 字节，预期 ${task.size} 字节`)
+      }
       if (existsSync(task.savePath)) unlinkSync(task.savePath)
       const { renameSync } = await import('node:fs')
       renameSync(partPath, task.savePath)
@@ -149,6 +213,7 @@ export class DownloadManager {
       task.speed = 0
       task.received = statSync(task.savePath).size
     } catch (error) {
+      task.viaTransfer = Boolean(task.request.file.meta?.savedFid)
       if (task.abortIntent) task.status = task.abortIntent
       else {
         task.status = 'failed'

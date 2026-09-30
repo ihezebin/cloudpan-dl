@@ -1,8 +1,8 @@
 import type { CloudFile, DownloadRequest, ParseRequest, Provider } from '../../shared/types'
-import { BaiduProvider } from './baidu'
+import { BaiduProvider, clearBaiduDownloadContext } from './baidu'
 import { providerConfig } from './config'
 import { QuarkProvider } from './quark'
-import { cloudSession, isLoggedIn } from './session'
+import { cloudSession, hasLoginSession, isLoggedIn, persistLoginCookies } from './session'
 import type { CloudProviderAdapter } from './types'
 import { detectProvider, normalizeShareInput } from './utils'
 
@@ -17,12 +17,14 @@ export async function parseShare(input: ParseRequest) {
 }
 
 export async function resolveDownloadUrl(request: DownloadRequest) {
-  if (request.file.downloadUrl) return request.file.downloadUrl
   const resolver = adapters[request.provider].resolveDownloadUrl
-  if (!resolver) {
-    throw new Error('平台未提供直链，请先在官方页面将文件转存到自己的网盘后重试')
-  }
-  return resolver.call(adapters[request.provider], request)
+  if (resolver) return resolver.call(adapters[request.provider], request)
+  if (request.file.downloadUrl) return request.file.downloadUrl
+  throw new Error('平台未提供分享文件下载地址')
+}
+
+export function downloadHeaders(request: DownloadRequest) {
+  return adapters[request.provider].downloadHeaders?.(request) || {}
 }
 
 export async function listFolder(provider: Provider, folder: CloudFile) {
@@ -40,4 +42,11 @@ export function assertDownloadUrl(provider: Provider, value: string) {
   if (!allowed) throw new Error('下载地址不属于所选网盘平台')
 }
 
-export { cloudSession, isLoggedIn, providerConfig }
+export {
+  clearBaiduDownloadContext,
+  cloudSession,
+  hasLoginSession,
+  isLoggedIn,
+  persistLoginCookies,
+  providerConfig
+}

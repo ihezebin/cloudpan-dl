@@ -287,6 +287,18 @@ main {
 .file-icon.document {
   color: #1677ff;
 }
+.file-icon.pdf {
+  color: #f5222d;
+}
+.file-icon.word {
+  color: #1677ff;
+}
+.file-icon.sheet {
+  color: #389e0d;
+}
+.file-icon.slide {
+  color: #fa541c;
+}
 .file-icon.archive {
   color: #fa541c;
 }
@@ -368,22 +380,107 @@ main {
 .task-title,
 .task-meta {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 .task-title strong {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.task-title span,
+.task-title-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.task-title-main .ant-tag {
+  flex: none;
+  margin: 0;
+}
+.task-status,
 .task-meta {
   color: var(--muted);
   font-size: 12px;
 }
+.task-status {
+  min-width: 42px;
+  text-align: right;
+  white-space: nowrap;
+}
+.task-meta-copy {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .task-meta em {
   color: #ff4d4f;
   font-style: normal;
+}
+.task-actions .ant-btn.ant-btn-text {
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid #d9e2ef !important;
+  border-radius: 7px;
+  outline: none;
+  color: #475569;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+.task-actions .ant-btn.ant-btn-text .anticon {
+  font-size: 12px;
+}
+.task-actions .ant-btn.ant-btn-text:hover,
+.task-actions .ant-btn.ant-btn-text:focus,
+.task-actions .ant-btn.ant-btn-text:focus-visible,
+.task-actions .ant-btn.ant-btn-text:active {
+  border-color: #1677ff !important;
+  color: #1677ff;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.task-actions .ant-btn.ant-btn-text.task-action-primary {
+  border-color: #91caff !important;
+  color: #1677ff;
+  background: transparent !important;
+}
+.task-actions .ant-btn.ant-btn-text.task-action-primary:hover,
+.task-actions .ant-btn.ant-btn-text.task-action-primary:focus-visible,
+.task-actions .ant-btn.ant-btn-text.task-action-primary:active {
+  border-color: #1677ff !important;
+  color: #0958d9;
+  background: transparent !important;
+}
+.task-actions .ant-btn.ant-btn-text.task-action-cancel {
+  border-color: #d9d9d9 !important;
+  color: #8c8c8c;
+  background: transparent !important;
+}
+.task-actions .ant-btn.ant-btn-text.task-action-cancel:hover,
+.task-actions .ant-btn.ant-btn-text.task-action-cancel:focus-visible,
+.task-actions .ant-btn.ant-btn-text.task-action-cancel:active {
+  border-color: #8c8c8c !important;
+  color: #595959;
+  background: transparent !important;
+}
+.task-actions .ant-btn.ant-btn-text.ant-btn-dangerous {
+  border-color: #ffccc7 !important;
+  color: #ff4d4f;
+  background: transparent !important;
+}
+.task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:hover,
+.task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:focus-visible,
+.task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:active {
+  border-color: #ff4d4f !important;
+  color: #cf1322;
+  background: transparent !important;
 }
 .modal-description {
   margin-top: 0;
@@ -622,6 +719,55 @@ main {
 }
 :root[data-theme='dark'] .task {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text {
+  border-color: #475569 !important;
+  color: #cbd5e1;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text:hover,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text:focus-visible,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text:active {
+  border-color: #4096ff !important;
+  color: #69b1ff;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-primary {
+  border-color: #315a91 !important;
+  color: #69b1ff;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-primary:hover,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-primary:focus-visible,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-primary:active {
+  border-color: #69b1ff !important;
+  color: #91caff;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-cancel {
+  border-color: #475569 !important;
+  color: #94a3b8;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-cancel:hover,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-cancel:focus-visible,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.task-action-cancel:active {
+  border-color: #94a3b8 !important;
+  color: #cbd5e1;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.ant-btn-dangerous {
+  border-color: #71313a !important;
+  color: #ff7875;
+  background: transparent;
+}
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:hover,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:focus-visible,
+:root[data-theme='dark'] .task-actions .ant-btn.ant-btn-text.ant-btn-dangerous:active {
+  border-color: #ff7875 !important;
+  color: #ff9c9c;
+  background: transparent;
 }
 :root[data-theme='dark'] .settings-drawer .ant-drawer-header {
   background: #111827 !important;

@@ -15,7 +15,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
     concurrency: 2,
     maxConcurrency: 2,
     theme: 'system',
-    font: 'lxgw_wenkai'
+    font: 'xiaolai'
   })
 
   useEffect(() => {

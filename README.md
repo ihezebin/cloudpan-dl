@@ -1,6 +1,12 @@
 # 云盘提速下载器
 
-基于 Electron + React + electron-vite 的 macOS / Windows 桌面端网盘解析和下载器。目前提供夸克网盘、百度网盘分享链接识别，网页登录态隔离、文件选择、下载队列、断点续传、暂停/继续和本地下载目录设置。
+云盘提速下载器是一款面向 macOS 和 Windows 的桌面端网盘分享解析与下载工具。粘贴夸克网盘或百度网盘分享链接后，即可浏览目录、跨目录选择文件，并使用本地下载队列统一管理任务。
+
+项目基于 Electron、React、TypeScript、electron-vite 和 Ant Design 构建，支持独立持久登录会话、链接内提取码识别、多任务并发、断点续传、暂停/继续、下载历史与自定义下载目录。
+
+| 分享链接解析                                     | 文件浏览与选择                                       |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| ![分享链接解析](docs/screenshots/parse-link.png) | ![文件浏览与选择](docs/screenshots/select-files.png) |
 
 > 这个项目不会破解会员、绕过账号权限、验证码或平台风控。所谓“减少客户端限速影响”的实现边界，是在平台已向当前账号返回合法下载直链后，由桌面端用 HTTP Range 和任务并发下载；实际速度仍取决于网盘服务端对账号和链接的限制。
 
@@ -34,10 +40,14 @@ Windows 包应在 Windows 或配置了 Wine/交叉打包环境的构建机上生
 
 ## 使用流程
 
-1. 在主界面登录对应网盘。登录页使用独立的 Electron 持久 Session，Cookie 不进入 React 页面和 localStorage。
+1. 在主界面登录对应网盘。登录页使用独立的 Electron 持久 Session，Cookie 不进入 React 页面和 localStorage。点击顶部已登录的账号标签可退出该网盘账号，并清除对应的本地会话。
 2. 粘贴分享链接，必要时填写提取码，点击“解析链接”。
-3. 双击文件夹或点击“进入”逐层浏览，勾选文件后下载。夸克分享文件没有直链时，应用会把用户选中的文件转存到当前登录账号的网盘根目录，再取得平台下载地址。这是夸克官方接口生成合法下载地址所需的步骤。
-4. 下载页可暂停、继续、取消，已完成任务可打开所在目录。未完成文件以 `.part` 保存，继续时使用 Range 请求。
+3. 点击文件夹逐层浏览，勾选文件后下载。夸克分享文件优先直接获取下载地址；仅当接口返回 `23018 / download file size limit` 时，检查个人网盘剩余空间，将所选文件转存到夸克默认分享目录，再获取下载地址。百度分享文件通过分享下载接口获取地址。
+4. 下载页可查看来源标签、暂停、继续、取消，已完成任务可打开所在目录。未完成文件以 `.part` 保存，继续时使用 Range 请求；完成前会核对文件大小。
+
+夸克账号状态由 `pan.quark.cn/account/info` 验证，下载令牌接口的错误不再被解释为“未登录”或“账号封禁”。夸克 API 请求明确使用 `credentials: 'include'` 携带持久会话 Cookie。此前同一 146.94 MB 文件在缺少此设置时返回 `23018`；补上后，原始分享文件直链返回成功，实际下载并校验了完整的 154,078,963 字节，无需转存。历史任务的分享凭证过期时会刷新后重试。
+
+若携带登录凭证后直链接口仍返回 `23018`，转存流程只处理当前选中的单个文件；剩余空间不足或容量无法确认时不执行转存。转存文件保留在个人网盘的默认分享目录，不会自动删除，因此会占用个人网盘空间。下载任务会显示“已转存”标签，续传时复用该文件。该回退流程已用实际账号验证能完成转存并获取个人网盘文件地址；验证产生的副本已清理。
 
 ## 代码结构
 
@@ -61,10 +71,14 @@ Provider 层参考了以下开源项目所验证过的平台边界，但没有�
 
 - [OpenList](https://github.com/OpenListTeam/OpenList)：多网盘 driver 分层、登录态与下载链接分离。
 - [Alist](https://github.com/alist-org/alist)：网盘适配器与统一文件模型。
-- [BaiduPCS-Go](https://github.com/qjfoidnh/BaiduPCS-Go)：百度网盘登录态、PCS 下载与分片下载思路。
+- [BaiduPCS-Go](https://github.com/qjfoidnh/BaiduPCS-Go)：百度网盘登录态与下载请求头思路。
+- [Quark Share Downloader](https://github.com/larryisthere/quark-share-downloader)：参考其用分享文件 ID 和 `share_fid_token` 直接请求夸克下载地址的流程；没有复制其代码。
+- [LinkSwift](https://github.com/hmjz100/LinkSwift)：参考其夸克桌面端下载请求参数及 `23018` 错误处理；没有复制其代码。
+- [netdisk-fast-download](https://github.com/qaiu/netdisk-fast-download)：其夸克实现将 `23018` 识别为分享直链大小限制，并转存后获取个人网盘文件地址；本项目仅在该错误下使用转存。
+- [quarkdownloaderpro](https://github.com/OP404OP/quarkdownloaderpro)：参考其通过 `/account/info` 区分账号登录状态与下载接口状态的做法。
 - [Motrix](https://github.com/agalwood/Motrix)：桌面下载任务队列与 aria2 风格交互。
 - [CloudSaver](https://github.com/jiangrui1994/CloudSaver)：夸克分享的 `stoken`、
-  `share_fid_token`、目录类型及转存参数结构。本项目仅参考公开接口边界与字段含义，
+  `share_fid_token` 与目录字段结构。本项目仅参考公开接口边界与字段含义，
   没有复制其业务代码。
 
 网盘私有接口可能随时变化。`src/main/providers.ts` 把平台差异集中在适配器内；生产维护时应补充真实账号下的集成测试，并遵守平台服务条款。

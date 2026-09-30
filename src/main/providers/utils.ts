@@ -28,10 +28,37 @@ export function normalizeShareInput(input: ParseRequest): ParseRequest {
 export function kindOf(name: string, folder: boolean): FileKind {
   if (folder) return 'folder'
   const ext = name.split('.').pop()?.toLowerCase() || ''
-  if (['mp4', 'mkv', 'mov', 'avi', 'flv', 'webm'].includes(ext)) return 'video'
-  if (['mp3', 'flac', 'wav', 'aac', 'm4a'].includes(ext)) return 'audio'
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'].includes(ext)) return 'image'
-  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'archive'
-  if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'].includes(ext)) return 'document'
+  if (['mp4', 'mkv', 'mov', 'avi', 'flv', 'webm', 'wmv', 'm4v', 'ts', 'mpeg', 'mpg'].includes(ext))
+    return 'video'
+  if (['mp3', 'flac', 'wav', 'aac', 'm4a', 'ogg', 'wma', 'ape', 'opus'].includes(ext))
+    return 'audio'
+  if (
+    ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'bmp', 'svg', 'tif', 'tiff', 'avif'].includes(ext)
+  )
+    return 'image'
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'iso', 'dmg'].includes(ext)) return 'archive'
+  if (
+    [
+      'pdf',
+      'doc',
+      'docx',
+      'odt',
+      'rtf',
+      'xls',
+      'xlsx',
+      'ods',
+      'csv',
+      'ppt',
+      'pptx',
+      'odp',
+      'txt',
+      'md',
+      'json',
+      'xml',
+      'yaml',
+      'yml'
+    ].includes(ext)
+  )
+    return 'document'
   return 'other'
 }

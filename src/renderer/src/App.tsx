@@ -62,7 +62,8 @@ function AppContent() {
             activeCount={cloud.activeCount}
             auth={cloud.auth}
             view={cloud.view}
-            onLogin={cloud.login}
+            onOpenPage={cloud.openPage}
+            onLogout={cloud.logout}
             onOpenSettings={() => setShowSettings(true)}
             onViewChange={cloud.setView}
           />

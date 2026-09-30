@@ -1,19 +1,17 @@
 import {
   ArrowLeftOutlined,
   DownloadOutlined,
-  FileFilled,
-  FolderFilled,
   LoginOutlined,
   LogoutOutlined,
-  SearchOutlined,
-  VideoCameraFilled
+  SearchOutlined
 } from '@ant-design/icons'
 import { Alert, App, Breadcrumb, Button, Input, message, Space, Table, Tag, Typography } from 'antd'
 import type { Key } from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CloudFile, FileKind, ParseResult, Provider } from '../../../shared/types'
 import { formatBytes } from '../utils/format'
 import { ProviderIcon } from './ProviderIcon'
+import { FileTypeIcon } from './FileTypeIcon'
 
 const kindLabels: Record<FileKind, string> = {
   archive: '压缩包',
@@ -23,12 +21,6 @@ const kindLabels: Record<FileKind, string> = {
   image: '图片',
   other: '文件',
   video: '视频'
-}
-
-function fileIcon(file: CloudFile) {
-  if (file.isFolder) return <FolderFilled />
-  if (file.kind === 'video') return <VideoCameraFilled />
-  return <FileFilled />
 }
 
 interface Props {
@@ -47,6 +39,7 @@ export function FileBrowser(props: Props) {
   const [files, setFiles] = useState(props.result.files)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<Array<{ name: string; files: CloudFile[] }>>([])
+  const tableContainerRef = useRef<HTMLElement>(null)
   const visibleFiles = useMemo(
     () => files.filter((file) => file.name.toLowerCase().includes(query.toLowerCase())),
     [files, query]
@@ -55,6 +48,10 @@ export function FileBrowser(props: Props) {
     () => new Set(props.selected.map((file) => file.id)),
     [props.selected]
   )
+
+  useEffect(() => {
+    tableContainerRef.current?.querySelector<HTMLElement>('.ant-table-body')?.scrollTo({ top: 0 })
+  }, [files])
 
   async function openFolder(folder: CloudFile) {
     setLoading(true)
@@ -118,7 +115,7 @@ export function FileBrowser(props: Props) {
   }
 
   return (
-    <section className="content-page">
+    <section className="content-page" ref={tableContainerRef}>
       <div className="page-heading">
         <div className={`source-logo ${props.result.provider}`}>
           <ProviderIcon provider={props.result.provider} size={25} />
@@ -207,7 +204,7 @@ export function FileBrowser(props: Props) {
             ellipsis: true,
             render: (_, file) => (
               <div className="file-name-cell">
-                <span className={`file-icon ${file.kind}`}>{fileIcon(file)}</span>
+                <FileTypeIcon file={file} />
                 <span>
                   <strong>{file.name}</strong>
                   {file.path && <small>{file.path}</small>}

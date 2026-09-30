@@ -11,4 +11,5 @@ export interface CloudProviderAdapter {
   parse(input: ParseRequest): Promise<ParseResult>
   listFolder?(folder: CloudFile): Promise<CloudFile[]>
   resolveDownloadUrl?(request: DownloadRequest): Promise<string>
+  downloadHeaders?(request: DownloadRequest): Record<string, string>
 }

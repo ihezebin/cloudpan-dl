@@ -43,7 +43,7 @@ export const APP_FONT_OPTIONS: AppFontOption[] = [
 const loaded = new Set<AppFontKey>()
 
 export async function applyAppFont(key: AppFontKey) {
-  const option = APP_FONT_OPTIONS.find((item) => item.key === key) || APP_FONT_OPTIONS[1]
+  const option = APP_FONT_OPTIONS.find((item) => item.key === key) || APP_FONT_OPTIONS[2]
   if (option.load && !loaded.has(option.key)) {
     await option.load()
     loaded.add(option.key)

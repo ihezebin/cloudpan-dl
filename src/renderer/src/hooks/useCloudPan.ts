@@ -81,6 +81,16 @@ export function useCloudPan() {
     setAuth(await window.cloudPan.authStates())
   }
 
+  async function openPage(provider: Provider) {
+    await window.cloudPan.openPage(provider)
+    setAuth(await window.cloudPan.authStates())
+  }
+
+  async function logout(provider: Provider) {
+    await window.cloudPan.logout(provider)
+    setAuth(await window.cloudPan.authStates())
+  }
+
   async function downloadSelected() {
     if (!result || !selected.length) return
     const items: DownloadRequest[] = selected
@@ -108,6 +118,8 @@ export function useCloudPan() {
     downloadSelected,
     error,
     login,
+    openPage,
+    logout,
     parse,
     parsing,
     passcode,

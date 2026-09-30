@@ -7,7 +7,7 @@ import {
   PauseOutlined,
   PlayCircleOutlined
 } from '@ant-design/icons'
-import { Button, Empty, Popconfirm, Progress, Space, Tooltip, Typography } from 'antd'
+import { Button, Empty, Popconfirm, Progress, Space, Tag, Tooltip, Typography } from 'antd'
 import type { DownloadTask } from '../../../shared/types'
 import { formatBytes } from '../utils/format'
 
@@ -64,8 +64,14 @@ export function TaskView({ tasks, onGoHome }: { tasks: DownloadTask[]; onGoHome:
               <div className="task" key={task.id}>
                 <div className="task-main">
                   <div className="task-title">
-                    <strong>{task.fileName}</strong>
-                    <span>
+                    <div className="task-title-main">
+                      <strong>{task.fileName}</strong>
+                      <Tag color={task.provider === 'quark' ? 'blue' : 'geekblue'}>
+                        {task.provider === 'quark' ? '夸克' : '百度'}
+                      </Tag>
+                      {task.viaTransfer && <Tag color="orange">已转存</Tag>}
+                    </div>
+                    <span className="task-status">
                       {task.status === 'downloading'
                         ? `${formatBytes(task.speed)}/s`
                         : statusLabels[task.status]}
@@ -83,60 +89,77 @@ export function TaskView({ tasks, onGoHome }: { tasks: DownloadTask[]; onGoHome:
                     }
                   />
                   <div className="task-meta">
-                    <span>
-                      {formatBytes(task.received)} / {formatBytes(task.size)}
-                    </span>
-                    {task.error && <em>{task.error}</em>}
+                    <div className="task-meta-copy">
+                      <span>
+                        {formatBytes(task.received)} / {formatBytes(task.size)}
+                      </span>
+                      {task.error && <em>{task.error}</em>}
+                    </div>
+                    <Space className="task-actions" size={6}>
+                      {['downloading', 'preparing'].includes(task.status) && (
+                        <Tooltip title="暂停下载">
+                          <Button
+                            className="task-action-primary"
+                            type="text"
+                            icon={<PauseOutlined />}
+                            onClick={() => window.cloudPan.taskAction(task.id, 'pause')}
+                          />
+                        </Tooltip>
+                      )}
+                      {['paused', 'failed'].includes(task.status) && (
+                        <Tooltip title="继续下载">
+                          <Button
+                            className="task-action-primary"
+                            type="text"
+                            icon={<PlayCircleOutlined />}
+                            onClick={() => window.cloudPan.taskAction(task.id, 'resume')}
+                          />
+                        </Tooltip>
+                      )}
+                      {task.status === 'completed' && (
+                        <Tooltip title="在访达中显示">
+                          <Button
+                            type="text"
+                            icon={<FolderOpenOutlined />}
+                            onClick={() => window.cloudPan.taskAction(task.id, 'open')}
+                          />
+                        </Tooltip>
+                      )}
+                      {!['completed', 'cancelled'].includes(task.status) && (
+                        <Popconfirm
+                          title="确定取消这个下载任务？"
+                          description="取消后将停止当前下载。"
+                          okText="确定取消"
+                          cancelText="继续下载"
+                          okButtonProps={{ danger: true, icon: <CloseOutlined /> }}
+                          cancelButtonProps={{ icon: <CloudDownloadOutlined /> }}
+                          onConfirm={() => window.cloudPan.taskAction(task.id, 'cancel')}
+                        >
+                          <Tooltip title="取消任务">
+                            <Button
+                              className="task-action-cancel"
+                              type="text"
+                              icon={<CloseOutlined />}
+                            />
+                          </Tooltip>
+                        </Popconfirm>
+                      )}
+                      <Popconfirm
+                        title="删除这条任务记录？"
+                        description="已下载的本地文件不会被删除。"
+                        okText="删除"
+                        cancelText="取消"
+                        okButtonProps={{ danger: true, icon: <DeleteOutlined /> }}
+                        cancelButtonProps={{ icon: <CloseOutlined /> }}
+                        onConfirm={() => window.cloudPan.taskAction(task.id, 'delete')}
+                      >
+                        <Tooltip title="删除记录">
+                          <Button type="text" danger icon={<DeleteOutlined />} />
+                        </Tooltip>
+                      </Popconfirm>
+                    </Space>
                   </div>
                 </div>
-                <Space className="task-actions">
-                  {['downloading', 'preparing'].includes(task.status) && (
-                    <Button
-                      type="text"
-                      icon={<PauseOutlined />}
-                      onClick={() => window.cloudPan.taskAction(task.id, 'pause')}
-                    />
-                  )}
-                  {['paused', 'failed'].includes(task.status) && (
-                    <Button
-                      type="text"
-                      icon={<PlayCircleOutlined />}
-                      onClick={() => window.cloudPan.taskAction(task.id, 'resume')}
-                    />
-                  )}
-                  {task.status === 'completed' && (
-                    <Tooltip title="在访达中显示">
-                      <Button
-                        type="text"
-                        icon={<FolderOpenOutlined />}
-                        onClick={() => window.cloudPan.taskAction(task.id, 'open')}
-                      />
-                    </Tooltip>
-                  )}
-                  {!['completed', 'cancelled'].includes(task.status) && (
-                    <Tooltip title="取消任务">
-                      <Button
-                        type="text"
-                        danger
-                        icon={<CloseOutlined />}
-                        onClick={() => window.cloudPan.taskAction(task.id, 'cancel')}
-                      />
-                    </Tooltip>
-                  )}
-                  <Popconfirm
-                    title="删除这条任务记录？"
-                    description="已下载的本地文件不会被删除。"
-                    okText="删除"
-                    cancelText="取消"
-                    okButtonProps={{ danger: true, icon: <DeleteOutlined /> }}
-                    cancelButtonProps={{ icon: <CloseOutlined /> }}
-                    onConfirm={() => window.cloudPan.taskAction(task.id, 'delete')}
-                  >
-                    <Tooltip title="删除记录">
-                      <Button type="text" danger icon={<DeleteOutlined />} />
-                    </Tooltip>
-                  </Popconfirm>
-                </Space>
               </div>
             )
           })}

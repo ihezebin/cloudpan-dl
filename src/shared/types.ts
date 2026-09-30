@@ -43,6 +43,7 @@ export interface DownloadTask {
   received: number
   speed: number
   status: TaskStatus
+  viaTransfer?: boolean
   error?: string
   createdAt: number
 }
@@ -50,6 +51,7 @@ export interface DownloadTask {
 export interface AuthState {
   provider: Provider
   loggedIn: boolean
+  hasSession: boolean
   label: string
 }
 export interface AppSettings {
@@ -64,6 +66,8 @@ export interface CloudPanAPI {
   parse(input: ParseRequest): Promise<ParseResult>
   listFolder(provider: Provider, folder: CloudFile): Promise<CloudFile[]>
   login(provider: Provider): Promise<AuthState>
+  openPage(provider: Provider): Promise<AuthState>
+  logout(provider: Provider): Promise<AuthState>
   authStates(): Promise<AuthState[]>
   addDownloads(items: DownloadRequest[]): Promise<DownloadTask[]>
   taskAction(id: string, action: 'pause' | 'resume' | 'cancel' | 'open' | 'delete'): Promise<void>
