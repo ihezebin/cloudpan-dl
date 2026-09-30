@@ -1,6 +1,6 @@
 import { BrowserWindow, net, shell, type IncomingMessage } from 'electron'
-import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from 'node:fs'
-import { basename, dirname, join } from 'node:path'
+import { createWriteStream, existsSync, mkdirSync, statSync, renameSync } from 'node:fs'
+import { dirname, extname, join, win32 } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import Store from 'electron-store'
 import type { AppSettings, DownloadRequest, DownloadTask } from '../shared/types'
@@ -15,6 +15,17 @@ type InternalTask = DownloadTask & {
 }
 
 type StoredTask = DownloadTask & { request: DownloadRequest }
+
+function safeFileName(name: string) {
+  const cleaned = win32
+    .basename(name)
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_')
+    .replace(/[. ]+$/g, '')
+  if (!cleaned || cleaned === '.') return 'download'
+  return /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(?:\.|$)/i.test(cleaned)
+    ? `_${cleaned}`
+    : cleaned
+}
 
 function requestDownload(
   request: DownloadRequest,
@@ -120,19 +131,36 @@ export class DownloadManager {
     this.window()?.webContents.send('downloads:changed', this.list())
   }
 
+  private destination(name: string) {
+    const directory = this.settings().defaultDownloadPath
+    const extension = extname(name)
+    const stem = name.slice(0, name.length - extension.length)
+    const reserved = new Set(
+      [...this.tasks.values()].map((task) =>
+        process.platform === 'win32' ? task.savePath.toLowerCase() : task.savePath
+      )
+    )
+    for (let number = 0; ; number += 1) {
+      const fileName = number ? `${stem} (${number})${extension}` : name
+      const savePath = join(directory, fileName)
+      const key = process.platform === 'win32' ? savePath.toLowerCase() : savePath
+      if (!reserved.has(key) && !existsSync(savePath) && !existsSync(`${savePath}.part`)) {
+        return { fileName, savePath }
+      }
+    }
+  }
+
   add(items: DownloadRequest[]) {
     const created = items
       .filter((item) => !item.file.isFolder)
       .map((item) => {
-        const safeName =
-          basename(item.file.name).replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_') || 'download'
         // The renderer cannot choose an arbitrary filesystem destination. Only the
         // directory selected through the trusted settings dialog is used here.
-        const savePath = join(this.settings().defaultDownloadPath, safeName)
+        const { fileName, savePath } = this.destination(safeFileName(item.file.name))
         const task: InternalTask = {
           id: randomUUID(),
           provider: item.provider,
-          fileName: safeName,
+          fileName,
           savePath,
           size: item.file.size,
           received: 0,
@@ -206,8 +234,7 @@ export class DownloadManager {
       if (task.size > 0 && downloadedSize !== task.size) {
         throw new Error(`下载文件大小不一致：实际 ${downloadedSize} 字节，预期 ${task.size} 字节`)
       }
-      if (existsSync(task.savePath)) unlinkSync(task.savePath)
-      const { renameSync } = await import('node:fs')
+      if (existsSync(task.savePath)) throw new Error('目标文件已存在，请选择其他下载位置')
       renameSync(partPath, task.savePath)
       task.status = 'completed'
       task.speed = 0

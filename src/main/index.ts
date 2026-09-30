@@ -58,8 +58,9 @@ function createWindow() {
     minHeight: 620,
     show: false,
     title: '云盘提速下载器',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
-    trafficLightPosition: { x: 18, y: 18 },
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 18, y: 18 } }
+      : {}),
     backgroundColor: '#f5f7fb',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
