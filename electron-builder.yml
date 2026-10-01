@@ -1,6 +1,6 @@
 appId: com.hezebin.cloudpandl
 productName: 云盘提速下载器
-artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+artifactName: ${name}-${version}-${os}-${arch}.${ext}
 directories:
   output: release
 files:
@@ -23,7 +23,7 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
 portable:
-  artifactName: ${productName}-${version}-portable.${ext}
+  artifactName: ${name}-${version}-portable.${ext}
 linux:
   category: Utility
   target:
