@@ -40,6 +40,8 @@ select {
   min-height: 100vh;
 }
 .window-dragbar {
+  display: flex;
+  justify-content: flex-end;
   height: 42px;
   flex: 0 0 42px;
   border-bottom: 1px solid var(--line);
@@ -121,7 +123,7 @@ select {
 main {
   min-height: calc(100vh - 60px);
 }
-.macos main {
+.custom-titlebar main {
   min-height: calc(100vh - 102px);
 }
 .hero {
@@ -792,4 +794,49 @@ main {
   .source-title h4 {
     max-width: 240px;
   }
+}
+
+.window-controls {
+  display: flex;
+  height: 41px;
+  -webkit-app-region: no-drag;
+}
+.window-control {
+  width: 46px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+.window-control svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.window-control:hover {
+  color: #1677ff;
+  background: #eff6ff;
+}
+.window-control:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: -2px;
+}
+:root[data-theme='dark'] .window-control {
+  color: #cbd5e1;
+}
+:root[data-theme='dark'] .window-control:hover {
+  color: #fff;
+  background: #1f2d44;
+}
+.window-control-close:hover,
+:root[data-theme='dark'] .window-control-close:hover {
+  color: #fff;
+  background: #ff4d4f;
 }

@@ -63,6 +63,12 @@ export interface AppSettings {
 }
 
 export interface CloudPanAPI {
+  platform: string
+  minimizeWindow(): void
+  toggleMaximizeWindow(): void
+  closeWindow(): void
+  isWindowMaximized(): Promise<boolean>
+  onWindowMaximized(listener: (maximized: boolean) => void): () => void
   parse(input: ParseRequest): Promise<ParseResult>
   listFolder(provider: Provider, folder: CloudFile): Promise<CloudFile[]>
   login(provider: Provider): Promise<AuthState>

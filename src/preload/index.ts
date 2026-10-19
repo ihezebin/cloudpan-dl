@@ -9,6 +9,16 @@ import type {
 } from '../shared/types'
 
 const api: CloudPanAPI = {
+  platform: process.platform,
+  minimizeWindow: () => ipcRenderer.send('window:minimize'),
+  toggleMaximizeWindow: () => ipcRenderer.send('window:toggle-maximize'),
+  closeWindow: () => ipcRenderer.send('window:close'),
+  isWindowMaximized: () => ipcRenderer.invoke('window:is-maximized'),
+  onWindowMaximized: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, maximized: boolean) => listener(maximized)
+    ipcRenderer.on('window:maximized-changed', handler)
+    return () => ipcRenderer.removeListener('window:maximized-changed', handler)
+  },
   parse: (input: ParseRequest) => ipcRenderer.invoke('cloud:parse', input),
   listFolder: (provider, folder) => ipcRenderer.invoke('cloud:list-folder', provider, folder),
   login: (provider: Provider) => ipcRenderer.invoke('cloud:login', provider),

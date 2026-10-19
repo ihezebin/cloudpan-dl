@@ -60,7 +60,9 @@ function createWindow() {
     title: '云盘提速下载器',
     ...(process.platform === 'darwin'
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 18, y: 18 } }
-      : {}),
+      : process.platform === 'win32'
+        ? { frame: false }
+        : {}),
     backgroundColor: '#f5f7fb',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
@@ -69,11 +71,33 @@ function createWindow() {
       nodeIntegration: false
     }
   })
+  const window = mainWindow
+  const sendMaximized = () => {
+    window.webContents.send('window:maximized-changed', window.isMaximized())
+  }
+  window.on('maximize', sendMaximized)
+  window.on('unmaximize', sendMaximized)
   mainWindow.once('ready-to-show', () => mainWindow?.show())
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   if (process.env.ELECTRON_RENDERER_URL) mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   else mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
 }
+
+ipcMain.on('window:minimize', (event) => {
+  BrowserWindow.fromWebContents(event.sender)?.minimize()
+})
+ipcMain.handle('window:is-maximized', (event) => {
+  return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
+})
+ipcMain.on('window:toggle-maximize', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender)
+  if (!window) return
+  if (window.isMaximized()) window.unmaximize()
+  else window.maximize()
+})
+ipcMain.on('window:close', (event) => {
+  BrowserWindow.fromWebContents(event.sender)?.close()
+})
 
 async function login(provider: Provider) {
   const config = providerConfig[provider]

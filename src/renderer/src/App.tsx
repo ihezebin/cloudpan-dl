@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { App as AntdApp, ConfigProvider, theme } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
+import { WindowTitleBar } from './components/WindowTitleBar'
 import { AppHeader } from './components/AppHeader'
 import { FileBrowser } from './components/FileBrowser'
 import { ParseView } from './components/ParseView'
@@ -14,7 +15,7 @@ function AppContent() {
   const cloud = useCloudPan()
   const [showSettings, setShowSettings] = useState(false)
   const [dark, setDark] = useState(false)
-  const isMac = navigator.userAgent.includes('Mac')
+  const hasTitleBar = ['darwin', 'win32'].includes(window.cloudPan.platform)
 
   useEffect(() => {
     window.cloudPan.getSettings().then((settings) => {
@@ -56,8 +57,8 @@ function AppContent() {
       }}
     >
       <AntdApp>
-        <div className={`app-shell ${isMac ? 'macos' : ''}`}>
-          {isMac && <div className="window-dragbar" aria-hidden="true" />}
+        <div className={`app-shell ${hasTitleBar ? 'custom-titlebar' : ''}`}>
+          {hasTitleBar && <WindowTitleBar />}
           <AppHeader
             activeCount={cloud.activeCount}
             auth={cloud.auth}
