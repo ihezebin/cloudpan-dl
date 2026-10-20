@@ -7,6 +7,8 @@
   --line: #e5e7eb;
   --muted: #8c8c8c;
   --text: #1f1f1f;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.28);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.45);
 }
 
 :root[data-theme='dark'] {
@@ -16,10 +18,30 @@
   --line: #2d3b52;
   --muted: #94a3b8;
   --text: #e5edf7;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.28);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
 }
 
 * {
   box-sizing: border-box;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-button {
+  display: none;
 }
 body {
   margin: 0;
@@ -37,7 +59,10 @@ select {
   font-family: inherit;
 }
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .window-dragbar {
   display: flex;
@@ -50,6 +75,7 @@ select {
 }
 .topbar {
   height: 60px;
+  flex: 0 0 60px;
   display: flex;
   align-items: center;
   gap: 28px;
@@ -121,10 +147,9 @@ select {
   padding-block: 3px;
 }
 main {
-  min-height: calc(100vh - 60px);
-}
-.custom-titlebar main {
-  min-height: calc(100vh - 102px);
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 .hero {
   width: min(760px, calc(100vw - 48px));
@@ -177,6 +202,40 @@ main {
   max-width: 1120px;
   margin: 0 auto;
   padding: 32px;
+}
+.file-browser {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+  overflow: hidden;
+}
+.file-browser > .page-heading,
+.file-browser > .folder-breadcrumb,
+.file-browser > .login-alert {
+  flex: none;
+}
+.file-table {
+  flex: 1;
+  min-height: 0;
+}
+.file-table > .ant-spin,
+.file-table .ant-spin-container,
+.file-table .ant-table,
+.file-table .ant-table-container {
+  height: 100%;
+}
+.file-table .ant-table-container {
+  display: flex;
+  flex-direction: column;
+}
+.file-table .ant-table-header {
+  flex: none;
+}
+.file-table .ant-table-body {
+  flex: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 .page-heading {
   display: flex;

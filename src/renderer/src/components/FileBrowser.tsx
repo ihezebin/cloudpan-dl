@@ -115,7 +115,7 @@ export function FileBrowser(props: Props) {
   }
 
   return (
-    <section className="content-page" ref={tableContainerRef}>
+    <section className="content-page file-browser" ref={tableContainerRef}>
       <div className="page-heading">
         <div className={`source-logo ${props.result.provider}`}>
           <ProviderIcon provider={props.result.provider} size={25} />
@@ -187,7 +187,7 @@ export function FileBrowser(props: Props) {
         dataSource={visibleFiles}
         loading={loading}
         pagination={false}
-        scroll={{ y: 'calc(100vh - 320px)' }}
+        scroll={{ y: '100%' }}
         rowSelection={{
           selectedRowKeys: [...selectedIds],
           onChange: updateVisibleSelection,
