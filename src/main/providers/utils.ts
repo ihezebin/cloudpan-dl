@@ -14,7 +14,24 @@ export function detectProvider(value: string): Provider {
 
 export function normalizeShareInput(input: ParseRequest): ParseRequest {
   const raw = input.url.trim()
-  const urlText = raw.match(/https?:\/\/[^\s]+/)?.[0] || raw
+  const matches = raw.match(/https?:\/\/[^\s<>"'，。；）)]+/gi) || []
+  if (matches.length > 1) throw new Error('请一次只输入一个分享链接')
+  let urlText = matches[0] || raw
+  // Pasting over a partly selected URL can join an old prefix to a new link.
+  // Recover only adjacent share URLs from the same host; do not select arbitrary redirects.
+  const pieces = urlText.split(/(?=https?:\/\/)/i)
+  if (pieces.length > 1) {
+    const urls = pieces.map((value) => new URL(value))
+    if (
+      !urls.every(
+        (value) =>
+          value.hostname === urls[0].hostname && /^\/s\/[a-zA-Z0-9_-]+$/.test(value.pathname)
+      )
+    ) {
+      throw new Error('分享链接包含重复或拼接的地址，请清空输入框后重新粘贴')
+    }
+    urlText = pieces[pieces.length - 1]
+  }
   const url = new URL(urlText)
   const embedded =
     url.searchParams.get('pwd') ||

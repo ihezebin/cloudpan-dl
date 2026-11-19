@@ -24,6 +24,8 @@ const kindLabels: Record<FileKind, string> = {
 }
 
 interface Props {
+  shareUrl: string
+  passcode: string
   onBack: () => void
   onDownload: () => void
   onLogin: (provider: Provider) => void
@@ -34,7 +36,7 @@ interface Props {
 }
 
 export function FileBrowser(props: Props) {
-  const { modal } = App.useApp()
+  const { modal, notification } = App.useApp()
   const [query, setQuery] = useState('')
   const [files, setFiles] = useState(props.result.files)
   const [loading, setLoading] = useState(false)
@@ -95,15 +97,6 @@ export function FileBrowser(props: Props) {
     setFiles(previous.files)
     setHistory((current) => current.slice(0, -1))
     setQuery('')
-  }
-
-  function toggle(file: CloudFile) {
-    if (file.isFolder) return
-    if (selectedIds.has(file.id)) {
-      props.onSelectionChange(props.selected.filter((item) => item.id !== file.id))
-    } else {
-      props.onSelectionChange([...props.selected, file])
-    }
   }
 
   function updateVisibleSelection(keys: Key[]) {
@@ -190,12 +183,28 @@ export function FileBrowser(props: Props) {
         scroll={{ y: '100%' }}
         rowSelection={{
           selectedRowKeys: [...selectedIds],
+          onCell: () => ({ onClick: (event) => event.stopPropagation() }),
           onChange: updateVisibleSelection,
           getCheckboxProps: (file) => ({ disabled: file.isFolder })
         }}
         onRow={(file) => ({
           className: file.isFolder ? 'folder-table-row' : 'file-table-row',
-          onClick: () => (file.isFolder ? openFolder(file) : toggle(file))
+          onClick: () =>
+            file.isFolder
+              ? openFolder(file)
+              : window.cloudPan
+                  .openPreviewWindow({
+                    provider: props.result.provider,
+                    shareUrl: props.shareUrl,
+                    passcode: props.passcode,
+                    file
+                  })
+                  .catch((error) =>
+                    notification.error({
+                      title: '无法打开预览',
+                      description: String(error.message || error)
+                    })
+                  )
         })}
         columns={[
           {

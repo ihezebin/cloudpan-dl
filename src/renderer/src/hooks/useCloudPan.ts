@@ -60,6 +60,7 @@ export function useCloudPan() {
       setShowPasscode(false)
       setPasscodeError('')
       setResult(parsed)
+      if (parsed.shareUrl) setUrl(parsed.shareUrl)
       setSelected([])
       setAuth(await window.cloudPan.authStates())
     } catch (reason) {
@@ -97,7 +98,7 @@ export function useCloudPan() {
       .filter((file) => !file.isFolder)
       .map((file) => ({
         provider: result.provider,
-        shareUrl: url,
+        shareUrl: result.shareUrl || url,
         passcode: passcode || undefined,
         file
       }))

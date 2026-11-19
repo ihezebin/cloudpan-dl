@@ -16,7 +16,8 @@
     "dist:mac": "npm run build && electron-builder --mac --publish never",
     "dist:win": "npm run build && electron-builder --win --x64 --publish never",
     "package:mac": "npm run dist:mac",
-    "package:win": "npm run dist:win"
+    "package:win": "npm run dist:win",
+    "test": "node --test tests/*.test.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
@@ -26,6 +27,8 @@
     "@vitejs/plugin-react": "^4.4.1",
     "antd": "^6.6.5",
     "electron-store": "^10.0.1",
+    "fflate": "^0.8.3",
+    "hls.js": "^1.7.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

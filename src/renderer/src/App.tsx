@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { App as AntdApp, ConfigProvider, theme } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import { WindowTitleBar } from './components/WindowTitleBar'
@@ -8,30 +8,15 @@ import { ParseView } from './components/ParseView'
 import { PasscodeModal } from './components/PasscodeModal'
 import { SettingsModal } from './components/SettingsModal'
 import { TaskView } from './components/TaskView'
+import { PreviewApp } from './components/PreviewApp'
 import { useCloudPan } from './hooks/useCloudPan'
-import { applyAppFont } from './fonts/appFont'
+import { useAppAppearance } from './hooks/useAppAppearance'
 
 function AppContent() {
   const cloud = useCloudPan()
   const [showSettings, setShowSettings] = useState(false)
-  const [dark, setDark] = useState(false)
+  const dark = useAppAppearance()
   const hasTitleBar = ['darwin', 'win32'].includes(window.cloudPan.platform)
-
-  useEffect(() => {
-    window.cloudPan.getSettings().then((settings) => {
-      document.documentElement.dataset.theme = settings.theme
-      setDark(settings.theme === 'dark')
-      void applyAppFont(settings.font)
-    })
-    const observer = new MutationObserver(() =>
-      setDark(document.documentElement.dataset.theme === 'dark')
-    )
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme']
-    })
-    return () => observer.disconnect()
-  }, [])
 
   return (
     <ConfigProvider
@@ -81,6 +66,8 @@ function AppContent() {
             )}
             {cloud.view === 'home' && cloud.result && (
               <FileBrowser
+                shareUrl={cloud.result.shareUrl || cloud.url}
+                passcode={cloud.passcode}
                 result={cloud.result}
                 selected={cloud.selected}
                 requiresLogin={cloud.requiresLogin}
@@ -110,4 +97,6 @@ function AppContent() {
   )
 }
 
-export default AppContent
+export default function App() {
+  return location.hash === '#preview' ? <PreviewApp /> : <AppContent />
+}

@@ -283,6 +283,10 @@ export class QuarkProvider implements CloudProviderAdapter {
     }
     if (!response.ok || (download.code !== undefined && download.code !== 0)) {
       if (download.code === 23018) {
+        if (request.purpose === 'preview')
+          throw new Error(
+            '该文件的直连预览受限，需要转存后才能访问。预览未执行自动转存，请下载后打开。'
+          )
         return this.transferAndDownload(request, shareId, stoken, shareFidToken)
       }
       throw new Error(

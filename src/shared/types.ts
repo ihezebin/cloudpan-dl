@@ -17,6 +17,7 @@ export interface ParseRequest {
   passcode?: string
 }
 export interface ParseResult {
+  shareUrl?: string
   provider: Provider
   title: string
   shareId: string
@@ -32,6 +33,7 @@ export interface DownloadRequest {
   shareUrl: string
   passcode?: string
   file: CloudFile
+  purpose?: 'download' | 'preview'
   savePath?: string
 }
 export interface DownloadTask {
@@ -63,6 +65,17 @@ export interface AppSettings {
 }
 
 export interface CloudPanAPI {
+  showPdfPreview(
+    bytes: ArrayBuffer,
+    bounds: { x: number; y: number; width: number; height: number }
+  ): Promise<void>
+  resizePdfPreview(bounds: { x: number; y: number; width: number; height: number }): void
+  closePdfPreview(): void
+  openPreviewWindow(request: DownloadRequest): Promise<void>
+  previewWindowRequest(): Promise<DownloadRequest | null>
+  openPreview(request: DownloadRequest): Promise<import('./preview').PreviewSource>
+  previewError(id: string): Promise<string | undefined>
+  closePreview(id: string): Promise<void>
   platform: string
   minimizeWindow(): void
   toggleMaximizeWindow(): void
@@ -78,6 +91,7 @@ export interface CloudPanAPI {
   addDownloads(items: DownloadRequest[]): Promise<DownloadTask[]>
   taskAction(id: string, action: 'pause' | 'resume' | 'cancel' | 'open' | 'delete'): Promise<void>
   getTasks(): Promise<DownloadTask[]>
+  onSettingsChanged(listener: (settings: AppSettings) => void): () => void
   getSettings(): Promise<AppSettings>
   updateSettings(settings: Partial<AppSettings>): Promise<AppSettings>
   selectDirectory(): Promise<string | null>

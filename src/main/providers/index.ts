@@ -13,7 +13,8 @@ const adapters: Record<Provider, CloudProviderAdapter> = {
 
 export async function parseShare(input: ParseRequest) {
   const normalized = normalizeShareInput(input)
-  return adapters[detectProvider(normalized.url)].parse(normalized)
+  const result = await adapters[detectProvider(normalized.url)].parse(normalized)
+  return { ...result, shareUrl: normalized.url }
 }
 
 export async function resolveDownloadUrl(request: DownloadRequest) {

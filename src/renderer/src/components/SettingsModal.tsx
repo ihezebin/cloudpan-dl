@@ -25,7 +25,12 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   async function update(patch: Partial<AppSettings>) {
     const next = await window.cloudPan.updateSettings(patch)
     setSettings(next)
-    document.documentElement.dataset.theme = next.theme
+    document.documentElement.dataset.theme =
+      next.theme === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : next.theme
     if (patch.font) await applyAppFont(next.font)
   }
 

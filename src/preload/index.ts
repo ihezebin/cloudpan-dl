@@ -10,6 +10,14 @@ import type {
 
 const api: CloudPanAPI = {
   platform: process.platform,
+  showPdfPreview: (bytes, bounds) => ipcRenderer.invoke('preview:pdf-show', bytes, bounds),
+  resizePdfPreview: (bounds) => ipcRenderer.send('preview:pdf-bounds', bounds),
+  closePdfPreview: () => ipcRenderer.send('preview:pdf-close'),
+  openPreviewWindow: (request) => ipcRenderer.invoke('preview:window-open', request),
+  previewWindowRequest: () => ipcRenderer.invoke('preview:window-request'),
+  openPreview: (request) => ipcRenderer.invoke('preview:open', request),
+  previewError: (id) => ipcRenderer.invoke('preview:error', id),
+  closePreview: (id) => ipcRenderer.invoke('preview:close', id),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   toggleMaximizeWindow: () => ipcRenderer.send('window:toggle-maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
@@ -28,6 +36,11 @@ const api: CloudPanAPI = {
   addDownloads: (items: DownloadRequest[]) => ipcRenderer.invoke('downloads:add', items),
   taskAction: (id, action) => ipcRenderer.invoke('downloads:action', id, action),
   getTasks: () => ipcRenderer.invoke('downloads:list'),
+  onSettingsChanged: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, settings: AppSettings) => listener(settings)
+    ipcRenderer.on('settings:changed', handler)
+    return () => ipcRenderer.removeListener('settings:changed', handler)
+  },
   getSettings: () => ipcRenderer.invoke('settings:get'),
   updateSettings: (settings: Partial<AppSettings>) =>
     ipcRenderer.invoke('settings:update', settings),

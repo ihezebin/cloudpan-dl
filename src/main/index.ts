@@ -11,6 +11,8 @@ import type {
   Provider
 } from '../shared/types'
 import { DownloadManager } from './downloads'
+import { registerPreview } from './preview'
+import { registerPreviewWindows } from './preview-window'
 import {
   clearBaiduDownloadContext,
   cloudSession,
@@ -66,6 +68,7 @@ function createWindow() {
     backgroundColor: '#f5f7fb',
     webPreferences: {
       preload: join(__dirname, '../preload/index.cjs'),
+      plugins: true,
       sandbox: true,
       contextIsolation: true,
       nodeIntegration: false
@@ -185,6 +188,9 @@ async function openProviderPage(provider: Provider): Promise<AuthState> {
 }
 
 app.whenReady().then(() => {
+  nativeTheme.themeSource = settings().theme
+  registerPreview()
+  registerPreviewWindows()
   Menu.setApplicationMenu(null)
   createWindow()
   downloads = new DownloadManager(() => mainWindow, settings)
@@ -238,7 +244,11 @@ ipcMain.handle('settings:update', (_event, patch: Partial<AppSettings>) => {
   if (patch.font && ['zhuque_fangsong', 'lxgw_wenkai', 'xiaolai'].includes(patch.font)) {
     store.set('font', patch.font)
   }
-  return settings()
+  const updated = settings()
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('settings:changed', updated)
+  }
+  return updated
 })
 ipcMain.handle('settings:select-directory', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
